@@ -260,6 +260,9 @@ public final class JsonPrimitive extends JsonElement {
       return (int) (value ^ (value >>> 32));
     }
     if (value instanceof Number) {
+      if (value instanceof BigInteger || value instanceof BigDecimal) {
+        return value.hashCode();
+      }
       long value = Double.doubleToLongBits(getAsNumber().doubleValue());
       return (int) (value ^ (value >>> 32));
     }
@@ -279,9 +282,15 @@ public final class JsonPrimitive extends JsonElement {
       return other.value == null;
     }
     if (isIntegral(this) && isIntegral(other)) {
+      if (value instanceof BigInteger && other.value instanceof BigInteger) {
+        return value.equals(other.value);
+      }
       return getAsNumber().longValue() == other.getAsNumber().longValue();
     }
     if (value instanceof Number && other.value instanceof Number) {
+      if (value instanceof BigDecimal && other.value instanceof BigDecimal) {
+        return value.equals(other.value);
+      }
       double a = getAsNumber().doubleValue();
       // Java standard types other than double return true for two NaN. So, need
       // special handling for double.
