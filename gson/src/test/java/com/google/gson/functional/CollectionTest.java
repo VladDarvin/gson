@@ -58,6 +58,20 @@ public class CollectionTest extends TestCase {
     gson = new Gson();
   }
 
+  public void testCollectionSubstitutesIterable() {
+    BagOfPrimitives foo = new BagOfPrimitives(1L, 2, true, "foo");
+    BagOfPrimitives bar = new BagOfPrimitives(3L, 4, false, "bar");
+    Iterable<BagOfPrimitives> before = Arrays.asList(foo, bar);
+    Type iterableType = new TypeToken<Iterable<BagOfPrimitives>>() {}.getType();
+    Type collectionType = new TypeToken<Collection<BagOfPrimitives>>() {}.getType();
+    String actualJson = gson.toJson(before, iterableType);
+    String expectedJson = gson.toJson(before, collectionType);
+    assertEquals(expectedJson, actualJson);
+    Iterable<BagOfPrimitives> after = gson.fromJson(actualJson, iterableType);
+    assertTrue(after instanceof Collection);
+    assertEquals(before, after);
+  }
+
   public void testTopLevelCollectionOfIntegersSerialization() {
     Collection<Integer> target = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
     Type targetType = new TypeToken<Collection<Integer>>() {}.getType();

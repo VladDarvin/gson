@@ -35,9 +35,15 @@ import java.util.Collection;
  */
 public final class CollectionTypeAdapterFactory implements TypeAdapterFactory {
   private final ConstructorConstructor constructorConstructor;
+  private final boolean supportIterable;
 
   public CollectionTypeAdapterFactory(ConstructorConstructor constructorConstructor) {
+    this(constructorConstructor, false);
+  }
+
+  public CollectionTypeAdapterFactory(ConstructorConstructor constructorConstructor, boolean supportIterable) {
     this.constructorConstructor = constructorConstructor;
+    this.supportIterable = supportIterable;
   }
 
   @Override
@@ -45,17 +51,31 @@ public final class CollectionTypeAdapterFactory implements TypeAdapterFactory {
     Type type = typeToken.getType();
 
     Class<? super T> rawType = typeToken.getRawType();
-    if (!Collection.class.isAssignableFrom(rawType)) {
+    if (!isRawTypeSupported(rawType)) {
       return null;
     }
 
-    Type elementType = $Gson$Types.getCollectionElementType(type, rawType);
+    Type elementType = getElementType(type, rawType);
     TypeAdapter<?> elementTypeAdapter = gson.getAdapter(TypeToken.get(elementType));
     ObjectConstructor<T> constructor = constructorConstructor.get(typeToken);
 
     @SuppressWarnings({"unchecked", "rawtypes"}) // create() doesn't define a type parameter
     TypeAdapter<T> result = new Adapter(gson, elementType, elementTypeAdapter, constructor);
     return result;
+  }
+
+  private boolean isRawTypeSupported(Class<?> rawType) {
+    if (supportIterable) {
+      return Iterable.class.isAssignableFrom(rawType);
+    }
+    return Collection.class.isAssignableFrom(rawType);
+  }
+
+  private Type getElementType(Type type, Class<?> rawType) {
+    if (supportIterable) {
+      return $Gson$Types.getIterableElementType(type, rawType);
+    }
+    return $Gson$Types.getCollectionElementType(type, rawType);
   }
 
   private static final class Adapter<E> extends TypeAdapter<Collection<E>> {
