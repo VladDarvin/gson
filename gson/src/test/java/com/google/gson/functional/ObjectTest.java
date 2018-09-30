@@ -289,6 +289,33 @@ public class ObjectTest extends TestCase {
     }));
   }
 
+  public void testAnonymousLocalClassesWithFieldsSerializationDisabled() throws Exception {
+    Gson gson = new Gson();
+    @SuppressWarnings("unused")
+    Object o = new Object() {
+      String foo = "foo";
+      String bar = "bar";
+    };
+    assertEquals("null", gson.toJson(o));
+  }
+
+  public void testAnonymousLocalClassesWithFieldsSerializationEnabled() throws Exception {
+    Gson gson = new GsonBuilder()
+      .enableAnonymousOrLocalClassSerialization()
+      .create();
+    @SuppressWarnings("unused")
+    Object o = new Object() {
+      String a = "foo";
+      String b = "bar";
+      Object c = new Object() {
+        String d = a;
+        String e = b;
+      };
+    };
+    String actual = gson.toJson(o);
+    assertEquals("{\"a\":\"foo\",\"b\":\"bar\",\"c\":{\"d\":\"foo\",\"e\":\"bar\"}}", actual);
+  }
+
   public void testAnonymousLocalClassesCustomSerialization() throws Exception {
     gson = new GsonBuilder()
         .registerTypeHierarchyAdapter(ClassWithNoFields.class,
